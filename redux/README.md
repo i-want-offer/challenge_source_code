@@ -1,0 +1,1 @@
+redux 从零开始实现,3000star: https://github.com/brickspert/blog/issues/22
