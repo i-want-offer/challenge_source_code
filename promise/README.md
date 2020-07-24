@@ -1,0 +1,1 @@
+* 从设计模式理解 Promise, 从零开始实现系列: https://juejin.im/post/5cc7d8f56fb9a031f61d838e#heading-7
