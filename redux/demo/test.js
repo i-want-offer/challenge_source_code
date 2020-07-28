@@ -10,11 +10,14 @@ const reducer = combineReducers({
 /*返回了一个 dispatch 被重写过的 store*/
 const store = createStore(reducer, {});
 
-store.subscribe(() => {
+const unsubscribe = store.subscribe(() => {
   let state = store.getState();
   console.log(state.counter.count);
   console.log(state.info);
 });
+
+// 可以取消
+// unsubscribe()
 
 /*自增*/
 store.dispatch({
