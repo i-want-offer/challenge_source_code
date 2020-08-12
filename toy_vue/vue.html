@@ -14,6 +14,7 @@
     <form>
       <input type="text"
              v-model="number">
+             
       <button type="button"
               v-click='increment'>增加1</button>
       <button type="button"
@@ -21,6 +22,7 @@
     </form>
 
     <h3 v-bind="number"></h3>
+    <h3 v-once="number"></h3>
   </div>
 </body>
 
@@ -69,6 +71,16 @@
       } else {
         this.listeners[key] = [watcher];
       }
+    }
+
+    once(key ,watcher) {
+      const origin_update = watcher.update
+      watcher.update = () => {
+        origin_update()
+        this.listeners.splice(this.listeners.indexOf(watcher), 1)
+      }
+
+      this.subscribe(key, watcher)
     }
 
     notify(key) {
@@ -120,6 +132,19 @@
         if (node.hasAttribute("v-bind")) {
           const attr = node.getAttribute("v-bind");
           self.publisher.subscribe(
+            attr,
+            new Watcher({
+              el: node,
+              vm_data: self.data,
+              attr: "innerHTML",
+              exp: attr,
+            })
+          );
+        }
+
+        if (node.hasAttribute("v-once")) {
+          const attr = node.getAttribute("v-once");
+          self.publisher.once(
             attr,
             new Watcher({
               el: node,
