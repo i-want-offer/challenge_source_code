@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<head>
+  <title>TOY VUE</title>
+</head>
+<style>
+  #app {
+    text-align: center;
+  }
+</style>
+
+<body>
+  <div id="app">
+    <form>
+      <input type="text"
+             v-model="number">
+      <button type="button"
+              v-click='increment'>增加1</button>
+      <button type="button"
+              v-click='decrement'>减少1</button>
+    </form>
+
+    <h3 v-bind="number"></h3>
+  </div>
+</body>
+
+<script>
+  class Observables {
+    constructor(target, action) {
+      return new Proxy(this._observables(target), this._handler(action));
+    }
+
+    _handler(notify) {
+      return {
+        set(target, propKey, val, receiver) {
+          console.log("更改了:" + propKey);
+          const is = Reflect.set(target, propKey, val);
+          // 通知publisher发布消息!
+          notify(propKey);
+          return is;
+        },
+      };
+    }
+
+    _observables(target) {
+      for (const key in target) {
+        const value = target[key];
+        if (typeof value === "object") {
+          this._observables(value);
+          target[key] = new Proxy(value, this._handler);
+        }
+      }
+      return target;
+    }
+  }
+
+  // 发布者
+  class Publisher {
+    constructor() {
+      this.listeners = {};
+
+      this.notify = this.notify.bind(this);
+      this.subscribe = this.subscribe.bind(this);
+    }
+
+    subscribe(key, watcher) {
+      if (this.listeners[key]) {
+        this.listeners[key].push(watcher);
+      } else {
+        this.listeners[key] = [watcher];
+      }
+    }
+
+    notify(key) {
+      this.listeners[key].forEach((watcher) => {
+        watcher.update();
+      });
+    }
+  }
+
+  // 订阅者
+  class Watcher {
+    constructor({vm_data, exp, el, attr}) {
+      this.el = el;
+      this.attr = attr;
+      this.vm_data = vm_data;
+      this.exp = exp;
+
+      this.update();
+    }
+
+    update() {
+      this.el[this.attr] = this.vm_data[this.exp];
+    }
+  }
+
+  class Vue {
+    constructor({el, data, methods}) {
+      this.$el = el;
+      this.methods = methods;
+
+      // 发布订阅
+      this.publisher = new Publisher();
+      // proxy代理数据
+      this.data = new Observables(data, this.publisher.notify);
+      // 编译html,添加watcher
+      this._compile(this.$el);
+    }
+
+    _compile(root) {
+      const self = this;
+      const nodes = root.children;
+
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        if (node.children) {
+          self._compile(node);
+        }
+
+        if (node.hasAttribute("v-bind")) {
+          const attr = node.getAttribute("v-bind");
+          self.publisher.subscribe(
+            attr,
+            new Watcher({
+              el: node,
+              vm_data: self.data,
+              attr: "innerHTML",
+              exp: attr,
+            })
+          );
+        }
+
+        if (node.hasAttribute("v-model")) {
+          const attr = node.getAttribute("v-model");
+          self.publisher.subscribe(
+            attr,
+            new Watcher({
+              el: node,
+              vm_data: self.data,
+              attr: "value",
+              exp: attr,
+            })
+          );
+
+          node.addEventListener("input", (e) => {
+            self.data[attr] = e.target.value;
+          });
+        }
+
+        if (node.hasAttribute("v-click")) {
+          const attr = node.getAttribute("v-click");
+
+          node.addEventListener("click", () => {
+            self.methods[attr].call(this.data);
+          });
+        }
+      }
+    }
+  }
+
+  window.vue = new Vue({
+    el: document.querySelector("#app"),
+    data: {
+      number: 1,
+    },
+    methods: {
+      increment() {
+        this.number++;
+      },
+
+      decrement() {
+        this.number--;
+      },
+    },
+  });
+</script>
+
+</html>
