@@ -152,10 +152,10 @@ class PromiseA {
     let count = 0;
 
     return new PromiseA((resolve, reject) => {
-      promises.forEach((promise) => {
+      promises.forEach((promise, index) => {
         PromiseA.resolve(promise).then(
           (v) => {
-            res.push(v);
+            res[index] = v;
             count++;
 
             if (count === len) {
