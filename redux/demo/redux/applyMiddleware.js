@@ -15,7 +15,8 @@ export default function applyMiddleware(...middlewares) {
         dispatch = middleware(dispatch)
       })
 
-      store.dispatch = chain;
+      store.dispatch = dispatch;
+      return store
     };
   };
 }
