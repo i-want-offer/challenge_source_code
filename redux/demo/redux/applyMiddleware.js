@@ -11,7 +11,7 @@ export default function applyMiddleware(...middlewares) {
       const chain = middlewares.map((middleware) => middleware(store));
 
       /* 实现 exception(time((logger(dispatch))))*/
-      store.dispatch = compose(chain)(store.dispatch);
+      store.dispatch = compose(...chain)(store.dispatch);
 
       return store;
     };
