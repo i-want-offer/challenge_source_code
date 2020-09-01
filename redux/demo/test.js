@@ -1,4 +1,9 @@
-import { createStore, combineReducers } from "./redux";
+import { createStore, combineReducers, applyMiddleware } from "./redux";
+import {
+  exceptionMiddleware,
+  timeMiddleware,
+  loggerMiddleware,
+} from "./middlewares";
 import counterReducer from "./reducers/counter";
 import infoReducer from "./reducers/info";
 
@@ -7,8 +12,12 @@ const reducer = combineReducers({
   info: infoReducer,
 });
 
-/*返回了一个 dispatch 被重写过的 store*/
-const store = createStore(reducer, {});
+const rewriteStore = applyMiddleware(
+  exceptionMiddleware,
+  timeMiddleware,
+  loggerMiddleware
+);
+const store = createStore(reducer, {}, rewriteStore);
 
 const unsubscribe = store.subscribe(() => {
   let state = store.getState();

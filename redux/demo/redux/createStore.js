@@ -1,7 +1,14 @@
-export default function createStore(reducer, initState) {
-  let state = initState;
+export default function createStore(
+  reducer,
+  initState,
+  rewriteCreateStoreFunc
+) {
+  if (typeof rewriteCreateStoreFunc === "function") {
+    const newCreateStore = rewriteCreateStoreFunc(createStore);
+    return newCreateStore(reducer, initState);
+  }
 
-  // 订阅者队列
+  let state = initState;
   const listeners = [];
 
   function subscribe(listener) {
