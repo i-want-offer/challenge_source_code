@@ -15,19 +15,22 @@ export default function createStore(
     listeners.push(listener);
 
     return function unsubscribe() {
-      const index = listeners.indexOf(listener);
-      listeners.splice(index, 1);
+      listeners.splice(listeners.indexOf(listener), 1);
     };
   }
 
   function dispatch(action) {
     state = reducer(state, action);
-
     listeners.forEach((fn) => fn());
   }
 
   function getState() {
     return state;
+  }
+
+  function replaceReducer(nextReducer) {
+    reducer = nextReducer;
+    dispatch({ type: Symbol() });
   }
 
   dispatch({ type: Symbol() });
@@ -36,5 +39,6 @@ export default function createStore(
     subscribe,
     getState,
     dispatch,
+    replaceReducer,
   };
 }
